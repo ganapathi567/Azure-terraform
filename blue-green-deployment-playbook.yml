@@ -1,0 +1,135 @@
+---
+- name: Ansible - Blue, Green, Yellow & Red non-destructive deployment playbook
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  
+  vars:
+    - webapp_name: webapp
+    - ec2:
+        instance_type: c5.4xlarge
+        image_id: ami-0497b4d2ec277c4f7
+        vpc_id: vpc-f5853d90
+        vpc_subnet_id_1a: subnet-dbbaa2f3
+        vpc_subnet_id_1c: subnet-6e9a4319
+        vpc_subnet_id_1d: subnet-f42ad2ad
+        availability_zone_1a: us-east-1a
+        availability_zone_1d: us-east-1d
+        availability_zone_1c: us-east-1c
+        region: us-east-1
+        key_name: tools
+        iam: webapp
+        group_id: sg-c47070a1
+    - lb:
+        group_id: sg-11707074
+        vpc_subnet_id_1a: subnet-f32ad2aa
+        vpc_subnet_id_1d: subnet-609a4317
+        vpc_subnet_id_1c: subnet-d9baa2f1
+
+  tasks:
+   
+   - name: gathering ec2 facts - blue
+     ec2_instance_facts:
+      filters:
+        "tag:creditshop_ansible_version_Prod": "{{ webapp_name }}-blue"
+        instance-state-name: running
+      region: "{{ ec2.region }}"
+     register: ec2_facts_blue
+   
+   - name: gathering ec2 facts - green
+     ec2_instance_facts:
+      filters:
+        "tag:creditshop_ansible_version_Prod": "{{ webapp_name }}-green"
+        instance-state-name: running
+      region: "{{ ec2.region }}"
+     register: ec2_facts_green
+
+   - name: gathering ec2 facts - yellow
+     ec2_instance_facts:
+      filters:
+        "tag:creditshop_ansible_version_Prod": "{{ webapp_name }}-yellow"
+        instance-state-name: running
+      region: "{{ ec2.region }}"
+     register: ec2_facts_yellow
+     
+   - name: gathering ec2 facts - red
+     ec2_instance_facts:
+      filters:
+        "tag:creditshop_ansible_version_Prod": "{{ webapp_name }}-red"
+        instance-state-name: running
+      region: "{{ ec2.region }}"
+     register: ec2_facts_red
+
+
+   - name: gathering elb facts - blue
+     ec2_elb_facts:
+       names: "{{ webapp_name }}-blue-elb"
+       region: "{{ ec2.region }}"
+     register: elb_name_facts_blue 
+
+   - name: gathering elb facts - green
+     ec2_elb_facts:
+       names: "{{ webapp_name }}-green-elb"
+       region: "{{ ec2.region }}"
+     register: elb_name_facts_green
+     
+   - name: gathering elb facts - yellow
+     ec2_elb_facts:
+       names: "{{ webapp_name }}-yellow-elb"
+       region: "{{ ec2.region }}"
+     register: elb_name_facts_yellow
+     
+   - name: gathering elb facts - red
+     ec2_elb_facts:
+       names: "{{ webapp_name }}-red-elb"
+       region: "{{ ec2.region }}"
+     register: elb_name_facts_red
+
+     
+   - name: Set elb version - blue
+     set_fact: 
+       elb_name: "{{ webapp_name }}-elb"
+       # elb_name: "{{ webapp_name }}-blue-elb"
+     when: elb_name_facts_green.elbs | length == 0 and elb_name_facts_blue.elbs | length == 0
+
+   - name: Set elb version - green
+     set_fact: 
+       elb_name: "{{ webapp_name }}-elb"
+       # elb_name: "{{ webapp_name }}-green-elb"
+     when: elb_name_facts_yellow.elbs | length == 0 and elb_name_facts_green.elbs | length == 0 and elb_name_facts_blue.elbs | length == 1
+     
+   - name: Set elb version - yellow
+     set_fact: 
+       elb_name: "{{ webapp_name }}-elb"
+       # elb_name: "{{ webapp_name }}-yellow-elb"
+     when: elb_name_facts_yellow.elbs | length == 0 and elb_name_facts_green.elbs | length == 1 and elb_name_facts_blue.elbs | length == 1
+     
+   - name: Set elb version - red
+     set_fact: 
+       elb_name: "{{ webapp_name }}-elb"
+       # elb_name: "{{ webapp_name }}-red-elb"
+     when: elb_name_facts_yellow.elbs | length == 1 and elb_name_facts_green.elbs | length == 1 and elb_name_facts_blue.elbs | length == 0
+     
+
+   - name: Set instance version only blue
+     set_fact:
+       launch_version: blue
+     when: ec2_facts_green.instances | length == 0 and ec2_facts_blue.instances | length == 0
+
+   - name: Set instance version only green
+     set_fact:
+       launch_version: green
+       scale_down_version: blue
+     when: ec2_facts_yellow.instances | length == 0 and ec2_facts_green.instances | length == 0 and ec2_facts_blue.instances | length != 0
+
+   - name: Set instance version only yellow
+     set_fact:
+       launch_version: yellow
+       scale_down_version: green
+     when: ec2_facts_yellow.instances | length == 0 and ec2_facts_green.instances | length != 0 and ec2_facts_blue.instances | length == 0
+
+   - name: Set instance version only red
+     set_fact:
+       launch_version: red
+       scale_down_version: yellow
+     when: ec2_facts_yellow.instances | length != 0 and ec2_facts_green.instances | length == 0 and ec2_facts_blue.instances | length == 0
