@@ -1,135 +1,374 @@
 ---
 - name: Ansible - Blue, Green, Yellow & Red non-destructive deployment playbook
-  hosts: localhost
-  connection: local
-  gather_facts: false
-  
-  vars:
-    - webapp_name: webapp
-    - ec2:
-        instance_type: c5.4xlarge
-        image_id: ami-0497b4d2ec277c4f7
-        vpc_id: vpc-f5853d90
-        vpc_subnet_id_1a: subnet-dbbaa2f3
-        vpc_subnet_id_1c: subnet-6e9a4319
-        vpc_subnet_id_1d: subnet-f42ad2ad
-        availability_zone_1a: us-east-1a
-        availability_zone_1d: us-east-1d
-        availability_zone_1c: us-east-1c
-        region: us-east-1
-        key_name: tools
-        iam: webapp
-        group_id: sg-c47070a1
-    - lb:
-        group_id: sg-11707074
-        vpc_subnet_id_1a: subnet-f32ad2aa
-        vpc_subnet_id_1d: subnet-609a4317
-        vpc_subnet_id_1c: subnet-d9baa2f1
+ hosts: localhost
+ connection: local
+ gather_facts: false
+ 
+ vars:
+ - webapp_name: webapp
+ - ec2:
+ instance_type: c5.4xlarge
+ image_id: ami-0497b4d2ec277c4f7
+ vpc_id: vpc-f5853d90
+ vpc_subnet_id_1a: subnet-dbbaa2f3
+ vpc_subnet_id_1c: subnet-6e9a4319
+ vpc_subnet_id_1d: subnet-f42ad2ad
+ availability_zone_1a: us-east-1a
+ availability_zone_1d: us-east-1d
+ availability_zone_1c: us-east-1c
+ region: us-east-1
+ key_name: tools
+ iam: webapp
+ group_id: sg-c47070a1
+ - lb:
+ group_id: sg-11707074
+ vpc_subnet_id_1a: subnet-f32ad2aa
+ vpc_subnet_id_1d: subnet-609a4317
+ vpc_subnet_id_1c: subnet-d9baa2f1
 
-  tasks:
-   
-   - name: gathering ec2 facts - blue
-     ec2_instance_facts:
-      filters:
-        "tag:creditshop_ansible_version_Prod": "{{ webapp_name }}-blue"
-        instance-state-name: running
-      region: "{{ ec2.region }}"
-     register: ec2_facts_blue
-   
-   - name: gathering ec2 facts - green
-     ec2_instance_facts:
-      filters:
-        "tag:creditshop_ansible_version_Prod": "{{ webapp_name }}-green"
-        instance-state-name: running
-      region: "{{ ec2.region }}"
-     register: ec2_facts_green
+ tasks:
+ 
+ - name: gathering ec2 facts - blue
+ ec2_instance_facts:
+ filters:
+ "tag:creditshop_ansible_version_Prod": "{{ webapp_name }}-blue"
+ instance-state-name: running
+ region: "{{ ec2.region }}"
+ register: ec2_facts_blue
+ 
+ - name: gathering ec2 facts - green
+ ec2_instance_facts:
+ filters:
+ "tag:creditshop_ansible_version_Prod": "{{ webapp_name }}-green"
+ instance-state-name: running
+ region: "{{ ec2.region }}"
+ register: ec2_facts_green
 
-   - name: gathering ec2 facts - yellow
-     ec2_instance_facts:
-      filters:
-        "tag:creditshop_ansible_version_Prod": "{{ webapp_name }}-yellow"
-        instance-state-name: running
-      region: "{{ ec2.region }}"
-     register: ec2_facts_yellow
-     
-   - name: gathering ec2 facts - red
-     ec2_instance_facts:
-      filters:
-        "tag:creditshop_ansible_version_Prod": "{{ webapp_name }}-red"
-        instance-state-name: running
-      region: "{{ ec2.region }}"
-     register: ec2_facts_red
+ - name: gathering ec2 facts - yellow
+ ec2_instance_facts:
+ filters:
+ "tag:creditshop_ansible_version_Prod": "{{ webapp_name }}-yellow"
+ instance-state-name: running
+ region: "{{ ec2.region }}"
+ register: ec2_facts_yellow
+ 
+ - name: gathering ec2 facts - red
+ ec2_instance_facts:
+ filters:
+ "tag:creditshop_ansible_version_Prod": "{{ webapp_name }}-red"
+ instance-state-name: running
+ region: "{{ ec2.region }}"
+ register: ec2_facts_red
 
 
-   - name: gathering elb facts - blue
-     ec2_elb_facts:
-       names: "{{ webapp_name }}-blue-elb"
-       region: "{{ ec2.region }}"
-     register: elb_name_facts_blue 
+ - name: gathering elb facts - blue
+ ec2_elb_facts:
+ names: "{{ webapp_name }}-blue-elb"
+ region: "{{ ec2.region }}"
+ register: elb_name_facts_blue 
 
-   - name: gathering elb facts - green
-     ec2_elb_facts:
-       names: "{{ webapp_name }}-green-elb"
-       region: "{{ ec2.region }}"
-     register: elb_name_facts_green
-     
-   - name: gathering elb facts - yellow
-     ec2_elb_facts:
-       names: "{{ webapp_name }}-yellow-elb"
-       region: "{{ ec2.region }}"
-     register: elb_name_facts_yellow
-     
-   - name: gathering elb facts - red
-     ec2_elb_facts:
-       names: "{{ webapp_name }}-red-elb"
-       region: "{{ ec2.region }}"
-     register: elb_name_facts_red
+ - name: gathering elb facts - green
+ ec2_elb_facts:
+ names: "{{ webapp_name }}-green-elb"
+ region: "{{ ec2.region }}"
+ register: elb_name_facts_green
+ 
+ - name: gathering elb facts - yellow
+ ec2_elb_facts:
+ names: "{{ webapp_name }}-yellow-elb"
+ region: "{{ ec2.region }}"
+ register: elb_name_facts_yellow
+ 
+ - name: gathering elb facts - red
+ ec2_elb_facts:
+ names: "{{ webapp_name }}-red-elb"
+ region: "{{ ec2.region }}"
+ register: elb_name_facts_red
 
-     
-   - name: Set elb version - blue
-     set_fact: 
-       elb_name: "{{ webapp_name }}-elb"
-       # elb_name: "{{ webapp_name }}-blue-elb"
-     when: elb_name_facts_green.elbs | length == 0 and elb_name_facts_blue.elbs | length == 0
+ 
+ - name: Set elb version - blue
+ set_fact: 
+ elb_name: "{{ webapp_name }}-elb"
+ # elb_name: "{{ webapp_name }}-blue-elb"
+ when: elb_name_facts_green.elbs | length == 0 and elb_name_facts_blue.elbs | length == 0
 
-   - name: Set elb version - green
-     set_fact: 
-       elb_name: "{{ webapp_name }}-elb"
-       # elb_name: "{{ webapp_name }}-green-elb"
-     when: elb_name_facts_yellow.elbs | length == 0 and elb_name_facts_green.elbs | length == 0 and elb_name_facts_blue.elbs | length == 1
-     
-   - name: Set elb version - yellow
-     set_fact: 
-       elb_name: "{{ webapp_name }}-elb"
-       # elb_name: "{{ webapp_name }}-yellow-elb"
-     when: elb_name_facts_yellow.elbs | length == 0 and elb_name_facts_green.elbs | length == 1 and elb_name_facts_blue.elbs | length == 1
-     
-   - name: Set elb version - red
-     set_fact: 
-       elb_name: "{{ webapp_name }}-elb"
-       # elb_name: "{{ webapp_name }}-red-elb"
-     when: elb_name_facts_yellow.elbs | length == 1 and elb_name_facts_green.elbs | length == 1 and elb_name_facts_blue.elbs | length == 0
-     
+ - name: Set elb version - green
+ set_fact: 
+ elb_name: "{{ webapp_name }}-elb"
+ # elb_name: "{{ webapp_name }}-green-elb"
+ when: elb_name_facts_yellow.elbs | length == 0 and elb_name_facts_green.elbs | length == 0 and elb_name_facts_blue.elbs | length == 1
+ 
+ - name: Set elb version - yellow
+ set_fact: 
+ elb_name: "{{ webapp_name }}-elb"
+ # elb_name: "{{ webapp_name }}-yellow-elb"
+ when: elb_name_facts_yellow.elbs | length == 0 and elb_name_facts_green.elbs | length == 1 and elb_name_facts_blue.elbs | length == 1
+ 
+ - name: Set elb version - red
+ set_fact: 
+ elb_name: "{{ webapp_name }}-elb"
+ # elb_name: "{{ webapp_name }}-red-elb"
+ when: elb_name_facts_yellow.elbs | length == 1 and elb_name_facts_green.elbs | length == 1 and elb_name_facts_blue.elbs | length == 0
+ 
 
-   - name: Set instance version only blue
-     set_fact:
-       launch_version: blue
-     when: ec2_facts_green.instances | length == 0 and ec2_facts_blue.instances | length == 0
+ - name: Set instance version only blue
+ set_fact:
+ launch_version: blue
+ when: ec2_facts_green.instances | length == 0 and ec2_facts_blue.instances | length == 0
 
-   - name: Set instance version only green
-     set_fact:
-       launch_version: green
-       scale_down_version: blue
-     when: ec2_facts_yellow.instances | length == 0 and ec2_facts_green.instances | length == 0 and ec2_facts_blue.instances | length != 0
+ - name: Set instance version only green
+ set_fact:
+ launch_version: green
+ scale_down_version: blue
+ when: ec2_facts_yellow.instances | length == 0 and ec2_facts_green.instances | length == 0 and ec2_facts_blue.instances | length != 0
 
-   - name: Set instance version only yellow
-     set_fact:
-       launch_version: yellow
-       scale_down_version: green
-     when: ec2_facts_yellow.instances | length == 0 and ec2_facts_green.instances | length != 0 and ec2_facts_blue.instances | length == 0
+ - name: Set instance version only yellow
+ set_fact:
+ launch_version: yellow
+ scale_down_version: green
+ when: ec2_facts_yellow.instances | length == 0 and ec2_facts_green.instances | length != 0 and ec2_facts_blue.instances | length == 0
 
-   - name: Set instance version only red
-     set_fact:
-       launch_version: red
-       scale_down_version: yellow
-     when: ec2_facts_yellow.instances | length != 0 and ec2_facts_green.instances | length == 0 and ec2_facts_blue.instances | length == 0
+ - name: Set instance version only red
+ set_fact:
+ launch_version: red
+ scale_down_version: yellow
+ when: ec2_facts_yellow.instances | length != 0 and ec2_facts_green.instances | length == 0 and ec2_facts_blue.instances | length == 0
+ 
+
+ - name: print
+ debug:
+ msg: " LV: {{launch_version}}, SV: {{ scale_down_version}}"
+ ignore_errors: yes
+
+
+ - name: Set instance version for blue
+ set_fact:
+ launch_version: blue
+ terminate_version: yellow
+ scale_down_version: red
+ when:
+ ec2_facts_yellow.instances[0].tags.creditshop_ansible_version_Prod == "{{ webapp_name }}-yellow" and ec2_facts_red.instances[0].tags.creditshop_ansible_version_Prod == "{{ webapp_name }}-red"
+ ignore_errors: yes
+
+ - name: Set instance version for green
+ set_fact:
+ launch_version: green
+ terminate_version: red
+ scale_down_version: blue
+ when:
+ ec2_facts_red.instances[0].tags.creditshop_ansible_version_Prod == "{{ webapp_name }}-red" and ec2_facts_blue.instances[0].tags.creditshop_ansible_version_Prod == "{{ webapp_name }}-blue"
+ ignore_errors: yes
+
+ - name: Set instance version for yellow
+ set_fact:
+ launch_version: yellow
+ terminate_version: blue
+ scale_down_version: green
+ when:
+ ec2_facts_blue.instances[0].tags.creditshop_ansible_version_Prod == "{{ webapp_name }}-blue" and ec2_facts_green.instances[0].tags.creditshop_ansible_version_Prod == "{{ webapp_name }}-green"
+ ignore_errors: yes
+ 
+ - name: Set instance version for red
+ set_fact:
+ launch_version: red
+ terminate_version: green
+ scale_down_version: yellow
+ when:
+ ec2_facts_green.instances[0].tags.creditshop_ansible_version_Prod == "{{ webapp_name }}-green" and ec2_facts_yellow.instances[0].tags.creditshop_ansible_version_Prod == "{{ webapp_name }}-yellow"
+ ignore_errors: yes
+
+ 
+ - name: print
+ debug:
+ msg: " LV: {{launch_version}}, SV: {{ scale_down_version}}, TV: {{ terminate_version }} "
+ ignore_errors: yes
+
+ - name: Creating/updating elb for {{ elb_name }}
+ ec2_elb_lb:
+ name: "{{ elb_name }}"
+ state: present
+ connection_draining_timeout: 600
+ region: "{{ ec2.region }}"
+ subnets: [ "{{ lb.vpc_subnet_id_1a }}", "{{ lb.vpc_subnet_id_1d }}", "{{ lb.vpc_subnet_id_1c }}" ]
+ security_group_ids: "{{ lb.group_id }}"
+ idle_timeout: 600
+ tags:
+ Name: "{{ elb_name }}"
+ listeners:
+ - protocol: http
+ load_balancer_port: 80
+ # instance_port: 80
+ instance_port: 8888
+ - protocol: https
+ load_balancer_port: 443
+ instance_port: 8889
+ instance_protocol: http
+ ssl_certificate_id: "arn:aws:iam::559469623165:server-certificate/creditshopcloud-wildcard"
+ health_check:
+ ping_protocol: http
+ # ping_port: 80
+ # ping_path: "/index.html"
+ ping_port: 8080
+ ping_path: "/gateway/platform-services/api/v1/healthcheck"
+ response_timeout: 10
+ interval: 30
+ unhealthy_threshold: 10
+ healthy_threshold: 3
+ access_logs:
+ interval: 5
+ s3_location: "elb-creditshopcloud"
+ cross_az_load_balancing: yes
+ register: elb_facts
+ when: elb_name_facts_red.elbs | length == 0 or elb_name_facts_yellow.elbs | length == 0 or elb_name_facts_green.elbs | length == 0 or elb_name_facts_blue.elbs | length == 0
+ 
+ - name: print
+ debug:
+ msg: "{{ elb_name }}"
+
+ - name: Creating/updating elb for {{ elb_name }}-mc
+ ec2_elb_lb:
+ name: "{{ elb_name }}-mc"
+ state: present
+ connection_draining_timeout: 600
+ region: "{{ ec2.region }}"
+ subnets: [ "{{ lb.vpc_subnet_id_1a }}", "{{ lb.vpc_subnet_id_1d }}", "{{ lb.vpc_subnet_id_1c }}" ]
+ security_group_ids: "{{ lb.group_id }}"
+ idle_timeout: 600
+ tags:
+ Name: "{{ elb_name }}-mc"
+ listeners:
+ - protocol: http
+ load_balancer_port: 80
+ # instance_port: 80
+ instance_port: 8888
+ - protocol: https
+ load_balancer_port: 443
+ instance_port: 8889
+ instance_protocol: http
+ ssl_certificate_id: "arn:aws:iam::559469623165:server-certificate/creditshopcloud-wildcard"
+ health_check:
+ ping_protocol: http
+ # ping_port: 80
+ # ping_path: "/index.html"
+ ping_port: 8080
+ ping_path: "/gateway/platform-services/api/v1/healthcheck"
+ response_timeout: 10
+ interval: 30
+ unhealthy_threshold: 10
+ healthy_threshold: 3
+ access_logs:
+ interval: 5
+ s3_location: "elb-creditshopcloud"
+ cross_az_load_balancing: yes
+ register: elb_facts
+ when: elb_name_facts_red.elbs | length == 0 or elb_name_facts_yellow.elbs | length == 0 or elb_name_facts_green.elbs | length == 0 or elb_name_facts_blue.elbs | length == 0
+ 
+ - name: print
+ debug:
+ msg: "{{ elb_name }}-mc"
+ 
+ - name: Creating new launch configuration for {{ webapp_name }}-{{ launch_version }}-lc
+ ec2_lc:
+ name: "{{ webapp_name }}-{{ launch_version }}-lc"
+ image_id: "{{ ec2.image_id }}"
+ region: "{{ ec2.region }}"
+ key_name: "{{ ec2.key_name }}"
+ security_groups: "{{ ec2.group_id }}"
+ instance_type: "{{ ec2.instance_type }}"
+ instance_profile_name: "{{ ec2.iam }}"
+ assign_public_ip: no
+ user_data: "{{ lookup('file', 'user-data.sh') }}"
+ # user_data: |
+ # #!/bin/bash
+ 
+ # # retry_attempts=10
+ # # attempt=0
+ # # while [[ $attempt -lt $retry_attempts ]]
+ # # do
+ 
+ # # curl -k --data "***/api/v2/job_templates/14/callback/
+ # # rpm -q tree
+
+ # # status_code=$(echo $?)
+ # # if [[ $status_code == 0 ]]
+ # # then
+ # # exit 0
+ # # fi
+ # # attempt=$(( attempt + 1 ))
+ # # echo "${status_code} received... retrying in 1 minute. (Attempt ${attempt})"
+ # # sleep 60s
+ # # done
+ # # exit 1
+
+ # yum install -y httpd
+ # echo Ansible Network Connection Passed! > /var/www/html/index.html
+ # service httpd start
+ instance_monitoring: yes
+ 
+ - name: print
+ debug:
+ msg: "{{ webapp_name }}-{{ launch_version }}-lc"
+
+ - name: Creating new autoscaling group for asg-{{ webapp_name }}-{{ launch_version }}
+ ec2_asg: 
+ name: "asg-{{ webapp_name }}-{{ launch_version }}"
+ region: "{{ ec2.region }}"
+ load_balancers: ["{{ elb_name }}", "{{ elb_name }}-mc"]
+ availability_zones: [ "{{ ec2.availability_zone_1a }}", "{{ ec2.availability_zone_1d }}", "{{ ec2.availability_zone_1c }}" ]
+ launch_config_name: "{{ webapp_name }}-{{ launch_version }}-lc"
+ health_check_period: 1000
+ health_check_type: ELB
+ min_size: 1
+ max_size: 1
+ desired_capacity: 1
+ replace_all_instances: yes
+ wait_timeout: 6000
+ vpc_zone_identifier: [ "{{ ec2.vpc_subnet_id_1a }}", "{{ ec2.vpc_subnet_id_1d }}", "{{ ec2.vpc_subnet_id_1c }}" ]
+ tags:
+ - creditshop_ansible_version_Prod: "{{ webapp_name }}-{{ launch_version }}"
+ - Name: "{{ webapp_name }}-{{ launch_version }}"
+ wait_for_instances: yes
+ 
+ - name: print
+ debug:
+ msg: "asg-{{ webapp_name }}-{{ launch_version }}"
+
+ - name: print
+ debug:
+ msg: " LV: {{launch_version}}, SV: {{ scale_down_version}} "
+ ignore_errors: yes
+ 
+ - name: Update asg for asg-{{ webapp_name }}-{{ scale_down_version }}
+ ec2_asg:
+ name: "asg-{{ webapp_name }}-{{ scale_down_version }}"
+ load_balancers: []
+ health_check_type: ELB
+ health_check_period: 1000
+ min_size: 1
+ max_size: 1
+ desired_capacity: 1
+ wait_timeout: 1800
+ when: scale_down_version is defined
+ ignore_errors: yes
+
+ - name: print
+ debug:
+ msg: " LV: {{launch_version}}, SV: {{ scale_down_version}} TV: {{ terminate_version }} "
+ ignore_errors: yes
+ 
+ - name: Deregister autoscaling group for asg-{{ webapp_name }}-{{ terminate_version }}
+ ec2_asg: 
+ name: "asg-{{ webapp_name }}-{{ terminate_version }}"
+ region: "{{ ec2.region }}"
+ state: absent
+ wait_timeout: 1800
+ when: terminate_version is defined
+ ignore_errors: yes
+
+ - name: Delete Older Launch_Config for {{ webapp_name }}-{{ terminate_version }}-lc
+ ec2_lc:
+ name: "{{ webapp_name }}-{{ terminate_version }}-lc"
+ region: "{{ ec2.region }}"
+ state: absent
+ when: terminate_version is defined
+ ignore_errors: yes
