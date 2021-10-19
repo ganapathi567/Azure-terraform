@@ -1,0 +1,70 @@
+//Connect to mongos by connecting to global protect VPN and execute following queries.
+
+--------Step 1: Queries to add a new shard----------
+
+sh.addShard("sts-mongo-shard-uk/mongo-shard-uk1.ppe.sts.eun.azure.tesco.org:27017,mongo-shard-uk2.ppe.sts.eun.azure.tesco.org:27017,mongo-shard-uk3.ppe.sts.eun.azure.tesco.org:27017")
+sh.addShard("sts-mongo-shard-roi/mongo-shard-roi1.ppe.sts.eun.azure.tesco.org:27017,mongo-shard-roi2.ppe.sts.eun.azure.tesco.org:27017,mongo-shard-roi3.ppe.sts.eun.azure.tesco.org:27017")
+sh.addShard("sts-mongo-shard-cmn/mongo-shard-cmn1.ppe.sts.eun.azure.tesco.org:27017,mongo-shard-cmn2.ppe.sts.eun.azure.tesco.org:27017,mongo-shard-cmn3.ppe.sts.eun.azure.tesco.org:27017")
+
+
+--------Step 2: Queries to assign a Tag name to an existing shard----------
+sh.addShardTag("sts-mongo-shard-cmn", "cmn")
+sh.addShardTag("sts-mongo-shard-roi", "roi")
+sh.addShardTag("sts-mongo-shard-uk", "uk")
+
+sh.status()
+
+--------Step 3: test sharding logic---------
+// create new test db
+use stsTestDb
+
+//enable sharding at db level
+sh.enableSharding("stsTestDb", "sts-mongo-shard-cmn");
+
+//create new test collection
+sh.shardCollection("stsTestDb.stsJobConfig", {"countryId":1});
+sh.addTagRange("stsTestDb.stsJobConfig", {countryId: MinKey},{countryId: 101}, "uk")
+sh.addTagRange("stsTestDb.stsJobConfig", {countryId: 101},{countryId: 201}, "roi")
+sh.addTagRange("stsTestDb.stsJobConfig", {countryId: 201},{countryId: MaxKey}, "cmn")
+
+//insert 4 records for diff countries
+db.stsJobConfig.insert(
+{
+    "name" : "test-uk",
+    "countryId" : 1.0,
+    "applicablePromoTypes" : [
+        "Basket"
+    ]
+})
+
+db.stsJobConfig.insert(
+{
+    "name" : "test-roi",
+    "countryId" : 101.0,
+    "applicablePromoTypes" : [
+        "Basket"
+    ]
+})
+
+db.stsJobConfig.insert(
+{
+    "name" : "test-cmn",
+    "countryId" : 501.0,
+    "applicablePromoTypes" : [
+        "Basket"
+    ]
+})
+
+db.stsJobConfig.insert(
+{
+    "name" : "test-uk-2",
+    "countryId" : 7.0,
+    "applicablePromoTypes" : [
+        "Basket"
+    ]
+})
+
+// test if the records goes to the right shard as per the country range. (connect to individual shard and test)
+
+//check sharding status
+sh.status()

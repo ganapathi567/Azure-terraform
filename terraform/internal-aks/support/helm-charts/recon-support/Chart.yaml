@@ -1,0 +1,5 @@
+apiVersion: v1
+appVersion: "1.0"
+description: A Helm chart for supporting manifest for the new recon namespace.
+name: recon-support-chart
+version: 1.0.0

@@ -1,0 +1,21 @@
+[Unit]
+Description=Kafka Daemon
+Documentation=https://apache.mirror.anlx.net/documentation/
+Requires=network.target
+After=network.target
+
+[Service]
+User=kafka
+Group=kafka
+LimitNOFILE=200000
+Environment="KAFKA_OPTS=-Djava.security.auth.login.config=/zookeeper_kafka/kafka/kafka_server_jaas.conf"
+ExecStart=/zookeeper_kafka/kafka/bin/kafka-server-start.sh /zookeeper_kafka/kafka/config/server.properties
+ExecStop=/zookeeper_kafka/kafka/bin/kafka-server-stop.sh /zookeeper_kafka/kafka/config/server.properties
+ExecReload=/zookeeper_kafka/kafka/bin/kafka-server-start.sh /zookeeper_kafka/kafka/config/server.properties
+TimeoutSec=30
+Restart=on-failure
+
+[Install]
+##WantedBy=multi-user.target
+WantedBy=default.target
+Alias=kafka.service

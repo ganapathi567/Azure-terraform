@@ -1,0 +1,5 @@
+// Caution: Run rs.initiate() on just one and only one mongod instance for the replica set.
+
+// login to any one instance(VM) and execute below command:
+
+mongo --host $mongoHostName /home/${admin_username}/replica-set-init.js

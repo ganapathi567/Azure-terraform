@@ -1,0 +1,24 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-rules
+  namespace: {{ .Values.nameSpace }}
+spec:
+  rules:
+    - host: {{ .Values.pdnsHost }}
+      http:
+        paths:
+          - path: /stsregions
+            pathType: Prefix
+            backend:
+              service:
+                name: sts-region-service-svc
+                port:
+                  number: 9105
+          - path: /tescostores
+            pathType: Prefix
+            backend:
+              service:
+                name: store-service-svc
+                port:
+                  number: 8100

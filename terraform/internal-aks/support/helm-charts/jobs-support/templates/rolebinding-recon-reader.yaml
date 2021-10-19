@@ -1,0 +1,13 @@
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: recon-reader-binding
+  namespace: {{ .Values.nameSpace }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: recon-reader-role
+subjects:
+  - kind: Group
+    namespace: {{ .Values.nameSpace }}
+    name: {{ .Values.aadGrpIds.reader }}

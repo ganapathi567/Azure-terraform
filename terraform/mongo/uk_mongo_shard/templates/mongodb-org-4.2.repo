@@ -1,0 +1,6 @@
+[mongodb-org-4.2]
+name=MongoDB Repository
+baseurl=https://repo.mongodb.org/apt/ubuntu/dists/bionic/mongodb-org/4.2/multiverse/binary-amd64/mongodb-org_4.2.7_amd64.deb
+gpgcheck=1
+enabled=1
+gpgkey=https://www.mongodb.org/static/pgp/server-4.2.asc

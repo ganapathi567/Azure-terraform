@@ -1,0 +1,48 @@
+# To generate self hosted keys 
+
+1. Generate keystore(At server):
+keytool -genkey -keyalg RSA -keystore server.keystore.jks -validity 1460 -storepass abc@123 -keypass abc@123 -dname "C=GB,ST=Hertfordshire,L=WelwynGardenCity,O=TescoPLC,OU=sts,CN=sts-kafka.ppe.sts.eun.azure.tesco.org" -storetype pkcs12
+
+2. Generate new ca-cert and ca-key:
+openssl req -new -x509 -keyout ca-key -out ca-cert -days 365
+
+3. Extracting cert/creating cert sign req(csr):
+keytool -keystore server.keystore.jks -alias stskafka -certreq -file cert-file.csr
+
+4. Sign the “cert-file” and cert-signed wil be the new cert:
+openssl x509 -req -CA ca-cert -CAkey ca-key -in cert-file.csr -out cert-signed -days 365 -CAcreateserial -passin pass:abc@123
+
+5. generate server.truststore key on server side
+keytool -keystore server.truststore.jks -alias CARoot -import -file ca-cert -validity 1460 -storepass abc@123 -keypass abc@123 -noprompt
+
+6. importing the ca-cert to keystore file:
+keytool -keystore server.keystore.jks -alias CARoot -import -file ca-cert -validity 1460 -storepass abc@123 -keypass abc@123 -noprompt
+
+7. import cert-signed to keystore:
+keytool -keystore server.keystore.jks -alias CARoot -import -file cert-signed -storepass abc@123 -keypass abc@123 -noprompt
+----------------------------------------------------------------------
+# To Reqest Entrust certs
+
+1. Create key pair :
+openssl genrsa -out sts_kafka_private.key 2048
+
+2. Create CSR :
+openssl req -new -sha256 -key sts_kafka_private.key -out sts_kafka.csr
+
+3. Upload the CSR to developer portal to get the three certificates
+Concatenate all three cert files into one sts_ppe.pem file
+
+4. Generated keystore type p12 with pem and key:
+openssl pkcs12 -export -in sts_kafka.pem -inkey sts_kafka_private.key -name sts-kafka.ppe.sts.eun.azure.tesco.org -out cert.p12
+
+5. convert p12 type to jks:
+keytool -importkeystore -srckeystore cert.p12 -srcstoretype pkcs12 -destkeystore server.keystore.jks
+
+6. generate truststore key with pem key:
+keytool -keystore server.truststore.jks -alias CARoot -import -file sts_ppe.pem -validity 1460
+----------------------------------------------------------------
+# Check status of keys 
+
+keytool -list -v -keystore server.keystore.jks
+openssl s_client -connect sts-kafka.ppe.sts.eun.azure.tesco.org:9092 -state -debug
+openssl s_client -connect sts-kafka.ppe.sts.eun.azure.tesco.org:9093 -state -debug

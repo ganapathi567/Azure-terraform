@@ -1,0 +1,13 @@
+apiVersion: rbac.authorization.k8s.io/v1
+# This cluster role binding allows anyone in the "manager" group to read secrets in any namespace.
+kind: ClusterRoleBinding
+metadata:
+  name: sts-cluster-reader-binding
+roleRef:
+  kind: ClusterRole
+  name: sts-cluster-reader
+  apiGroup: rbac.authorization.k8s.io
+subjects:
+  - kind: Group
+    name: a2cc2309-d13d-4e05-9908-640bf0f7cf88
+    apiGroup: rbac.authorization.k8s.io

@@ -1,0 +1,69 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sts-groovy-all-cm
+  namespace: sts-jenkins-mgmt
+data:
+  sts-auth-strategy.groovy: |
+    import jenkins.model.*
+    import hudson.security.*
+    import hudson.model.*
+    import com.cloudbees.plugins.*
+    import com.cloudbees.plugins.credentials.CredentialsProvider
+    import hudson.scm.*
+
+    def jenkins = Jenkins.getInstance()
+
+    GlobalMatrixAuthorizationStrategy authorizationStrategy = new GlobalMatrixAuthorizationStrategy()
+
+    // allows cluster administrators to access Jenkins with read only permissions
+    authorizationStrategy.add(Jenkins.ADMINISTER, "25-Finance*sts-admin-v1")
+    authorizationStrategy.add(Jenkins.ADMINISTER, "jenkins-operator")
+
+    def uname = "25-Finance*sts-development-v1"
+
+    // Enable Overall permissions
+    authorizationStrategy.add(Jenkins.READ, uname)
+
+    // Enable Credentials permissions
+    authorizationStrategy.add(CredentialsProvider.CREATE, uname)
+    authorizationStrategy.add(CredentialsProvider.DELETE, uname)
+    authorizationStrategy.add(CredentialsProvider.UPDATE, uname)
+    authorizationStrategy.add(CredentialsProvider.VIEW, uname)
+    authorizationStrategy.add(CredentialsProvider.MANAGE_DOMAINS, uname)
+
+    //Enable Agent permissions
+    authorizationStrategy.add(Jenkins.MasterComputer.BUILD, uname)
+    authorizationStrategy.add(Jenkins.MasterComputer.CONFIGURE, uname)
+    authorizationStrategy.add(Jenkins.MasterComputer.CONNECT, uname)
+    authorizationStrategy.add(Jenkins.MasterComputer.CREATE, uname)
+    authorizationStrategy.add(Jenkins.MasterComputer.DELETE, uname)
+    authorizationStrategy.add(Jenkins.MasterComputer.DISCONNECT, uname)
+
+    //Enable Job permissions
+    authorizationStrategy.add(Item.BUILD, uname)
+    authorizationStrategy.add(Item.CANCEL, uname)
+    authorizationStrategy.add(Item.CONFIGURE, uname)
+    authorizationStrategy.add(Item.CREATE, uname)
+    authorizationStrategy.add(Item.DELETE, uname)
+    authorizationStrategy.add(Item.DISCOVER, uname)
+    authorizationStrategy.add(Item.READ, uname)
+    authorizationStrategy.add(Item.WORKSPACE, uname)
+
+    // Enable Run permissions
+    authorizationStrategy.add(Run.DELETE, uname)
+    authorizationStrategy.add(Run.UPDATE, uname)
+    //authorizationStrategy.add(Run.REPLAY, uname)
+
+    // Enable View permissions
+    authorizationStrategy.add(View.READ, uname)
+    authorizationStrategy.add(View.DELETE, uname)
+    authorizationStrategy.add(View.CREATE, uname)
+    authorizationStrategy.add(View.CONFIGURE, uname)
+
+    //Enable Tag permission
+    authorizationStrategy.add(SCM.TAG, uname)
+
+    jenkins.setAuthorizationStrategy(authorizationStrategy)
+    jenkins.save()
+

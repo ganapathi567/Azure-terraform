@@ -1,0 +1,21 @@
+1. Create one file 
+
+cd /sftp/store-finalization/
+touch test-file
+
+2. Export credentials
+
+export AZCOPY_AUTO_LOGIN_TYPE=SPN
+export AZCOPY_SPA_CLIENT_SECRET=o@kZSEPHVpnYMBZ0
+
+3. azcopy login 
+cd /home/sts-admin/azcopy_linux_amd64_10.2.1/
+./azcopy login --service-principal  --application-id fdf50398-a0a9-45a7-b463-0b808b71f42b --tenant-id=f55b1f7d-7a7f-49e4-9b90-55218aad89f8
+
+4. az sync
+
+./azcopy sync "/sftp/store-finalization" "https://eunppe025stsapp.blob.core.windows.net/sts-ppe-store-finalization-events/" --recursive 
+
+5. list of blobs
+
+az storage blob list -c sts-ppe-store-finalization-events --account-name eunppe025stsapp
