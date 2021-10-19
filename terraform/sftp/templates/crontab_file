@@ -1,3 +1,0 @@
-*/5 * * * * /home/sts-admin/azcopy_linux_amd64_10.2.1/.azcopy sync "/sftp/store-finalization" "https://eunppe025stsapp.blob.core.windows.net/sts-ppe-store-finalization-events" --recursive
-*/5 * * * * /home/sts-admin/azcopy_linux_amd64_10.2.1/.azcopy sync "/sftp/bank-statement-events" "https://eunppe025stsapp.blob.core.windows.net/sts-ppe-bank-statement-events" --recursive
-

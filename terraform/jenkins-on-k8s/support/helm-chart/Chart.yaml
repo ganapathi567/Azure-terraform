@@ -1,5 +1,0 @@
-apiVersion: v1
-appVersion: "1.0"
-description: A Helm chart for supporting manifest for jenkins Configuration as Code approach.
-name: sts-jenkins-support-chart
-version: 1.0.0

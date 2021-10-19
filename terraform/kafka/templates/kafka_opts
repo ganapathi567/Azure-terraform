@@ -1,1 +1,0 @@
-KAFKA_OPTS="-Djava.security.auth.login.config=/zookeeper_kafka/kafka_2.12-2.3.0/config/kafka_server_jaas.conf"
